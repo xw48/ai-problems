@@ -1,0 +1,59 @@
+o that is still the shortest path to that city? (In other words, which city is furthest from Bloomington?)
+ven a set of cities/towns with (latitude, longitude) information, and a set of major highway segments, come up with routing plans.
+#
+# In this problem, cities/towns/intersections are represented by nodes on graph. Each edge is related with: edge(highway) name, distance, and speed limit.
+# the weight of each edge is designed according to routing modes. For instance, edge weight in 'distance' mode is the number of miles of current segment; edge
+# weight in 'time' mode is the time spent on current segment.
+#
+# state space: each state could be interpreted as 'the city/town/intersection we are in'.
+# successor function: 1) for bfs, dfs and idx, successor function of a node gives a set of neighbors of current city.
+#                     2) for astar, we have two approaches in mind:
+#                       a) take 'time' mode as an exmple. Since there's no priori of speed limit of upcoming highways, its difficult to come up with an admissible
+#                       heuristic except h(current city) = distance(current city, end city)/MaximumSpeed. For 'segments', heuristics like 'h(s) = 1 if s is not end city'
+#                       guarantees admissibility. However, in some cases, these heuristic functions coverage rather slow.
+#                       b) Given (longitude, latitude) of cities, we can easily calculate lower bound of distance between two cities (see function distance_heuristic). This
+#                       distance heuristic is guranteed to be admissible. What's more, it complies with common sense since roads are always designed to be short to minimize
+#                       construction cost. We also noticed that, in most cases, distance reflects other measurements like time spent on road. Therefore, our implementation
+#                       comes out with a set of candidate routing plans based on distance heuristic, and then chooses a best plan according to routing mode.
+#
+# During implementation, we found that some cities/towns/intersections on our graph do not appear in 'city_gps.txt', which means our heuristic function does not work for
+# these nodes. It's problematic to add these nodes to priority queue of fringe. We managed to avoid adding these node to fringe set by following way: If such a city/intersection,
+# say A, appears in successor function, we tries to recursively find neighbors of A that are located in 'city_gps.txt'. Adding these neighbors to successor set guarantees that
+# all cities in fringe get a proper heuristic value.
+#
+# for implementation details, we use pandas package to handle routing data. This package provides easy and intuitive operations for our operation.
+#
+# Answer these questions:
+# (1) Which search algorithm seems to work best for each routing options?
+#  Our efficiency measurement is based on routing between Bloomington,_Indiana and Indianapolis,_Indiana.
+#  Routing options      segments    distance    time        scenic
+#   bfs                 0.16447     0.16302     0.17029     0.16892
+#   dfs                 20.95988    21.29049    21.12573    20.90377  
+#   ids                 0.28732     0.29473     0.26858     0.28188
+#   astar               0.14253     0.14861     0.14451     0.14474  (when giving 1 candidate routing plan)
+#
+#   In above measurement, astar works better than other algorithms. Noticeably, the solution provided by dfs is rather long and is not optimal. It also consumes
+#   too much time to finish. ids need more operations than bfs. 
+#
+# (2) Which algorithm is fastest in terms of the amount of computation time required by your program,
+# and by how much, according to your experiments? (To measure time accurately, you may want to temporarily
+# include a loop in your program that runs the routing a few hundred or thousand times.)
+# Since our astar algorithm uses a heuristic for distance, we calculate computation time when # of candidate routing plans is set to 1 in distance mode. The 
+# computation time is shown in (1). We can see that: astar is the fastest routing algorithm here. And it is almost twice faster than ids, 146 times faster than dfs,
+# and 15.4% faster than bfs.
+# 
+# (3) Which algorithm requires the least memory, and by how much, according to your experiments?
+#  This experiment is conducted under 'distance' routing option. The memory usage is extracted from 'top' command. 
+#  We see that 'RES' segment of command output is: bfs (49820), dfs (65396), ids (52052), and astar (50752). In my opinion, the most part of memory usage is 
+#  the routing data loaded into memory. 
+#  bfs uses least memory in our experiment, dfs uses 31% more than bfs, ids uses 2.5% more than bfs, and astar uses 1.9% more than bfs.
+#
+# (4) Which heuristic function did you use, how good is it, and how might you make it better?
+#  As discussed above, we use 'airline distance' based on the provided latitude and longitude. During our experiments, this heuristic function gives an answer in reasonal 
+# amount of time. As discussed in (1), astar algorithm with this heuristic provides better performace than other algorithm. 
+# 
+# Till now, i have no idea about how to improve this heuristic. Because highways between two cities may follow the 'airline', other heuristic functions may not be admissible.
+# 
+# (5) Supposing you start in Bloomington, which city should you travel to if you want to take the longest possible drive (in miles)
+# that is still the shortest path to that city? (In other words, which city is furthest from Bloomington?)
+##
